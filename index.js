@@ -1,4 +1,5 @@
 /* global chrome */
+const SEC = 1000;
 
 const createTabela = (trybeSchedule) => {
   const tabela = document.getElementById('tabela');
@@ -7,27 +8,28 @@ const createTabela = (trybeSchedule) => {
   const tabelaTitle = document.createElement('p');
   tabelaTitle.innerText = 'Horários Trybe';
 
-  tabela.appendChild(document.createElement('br'));
-
   trybeSchedule.forEach(({ schedule, zoomLink }) => {
-    const spanTagHour = document.createElement('span');
-    spanTagHour.innerText = schedule;
-    tabela.appendChild(spanTagHour);
+    const pTagHour = document.createElement('p');
+    pTagHour.innerText = schedule;
+    tabela.appendChild(pTagHour);
     if (zoomLink) {
-      const spanTagZoom = document.createElement('span');
-      spanTagZoom.innerText = zoomLink;
-      tabela.appendChild(spanTagZoom);
+      const aLinkZoom = document.createElement('a');
+      aLinkZoom.innerText = 'Zoom';
+      aLinkZoom.href = zoomLink;
+      aLinkZoom.target = '_blank';
+      aLinkZoom.rel = 'noreferrer noopener';
+      tabela.appendChild(aLinkZoom);
     }
-    tabela.appendChild(document.createElement('br'));
-    tabela.appendChild(document.createElement('br'));
   });
 };
 
 try {
   const getTodaySchedule = document.getElementById('getTodaySchedule');
-
   getTodaySchedule.addEventListener('click', async () => {
-    const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+    const [tab] = await chrome.tabs.query({
+      active: true,
+      currentWindow: true,
+    });
     let trybeSchedule = [];
 
     chrome.scripting.executeScript({
@@ -36,16 +38,32 @@ try {
     });
 
     chrome.alarms.create('Test1111', { when: Date.now() + 5000 });
-    chrome.alarms.getAll((resp) => console.log('----------INDEX----------\n resp Alarms: ', resp));
+    chrome.alarms.getAll((resp) =>
+      console.log('----------INDEX----------\n resp Alarms: ', resp)
+    );
 
     chrome.runtime.sendMessage('runAlarmsAnNotifications', () => {});
 
     chrome.storage.local.get(['scheduleAndLinks'], ({ scheduleAndLinks }) => {
       trybeSchedule = scheduleAndLinks;
     });
-
-    setTimeout(() => createTabela(trybeSchedule), 1500);
+    // createTabela(trybeSchedule)
+    setTimeout(
+      () => (document.getElementById('tabela').style.display = 'flex'),
+      1500
+    );
+    setTimeout(() => createTabela(trybeSchedule), 1.5 * SEC);
   });
 } catch (error) {
   console.log(error);
 }
+
+function switchTheme(e) {
+  if (e.target.checked) {
+    document.documentElement.setAttribute('data-theme', 'dark');
+  } else {
+    document.documentElement.setAttribute('data-theme', 'light');
+  }
+}
+
+document.querySelector('#switch-input').addEventListener('click', switchTheme);
